@@ -57,9 +57,9 @@ API credentials must never be committed to GitHub. OpenAI and Gemini credentials
 
 - [x] Webhook configured
 - [x] Edit Fields configured
-- [ ] ChatGPT configured
-- [ ] Gemini configured
-- [ ] Merge configured
-- [ ] End-to-end testing
-- [ ] Export workflow to `backend/n8n-workflows/01-report-intake.json`
+- [x] ChatGPT configured
+- [x] Gemini configured
+- [x] Merge configured
+- [x] End-to-end testing
+- [x] Export workflow to `backend/n8n-workflows/01-report-intake.json`
 
