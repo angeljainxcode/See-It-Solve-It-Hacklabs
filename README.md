@@ -7,10 +7,16 @@
 **IEEE Hack Synapse 2026** · 🏆 Best Use of n8n · ⏱️ 36-Hour Hackathon
 
 **Team:** Hacklabs  
+
 **MVP LINK:** https://vsnet-plaza-would-synthetic.trycloudflare.com/
+
 **VIDEO LINK**- https://drive.google.com/file/d/1227Y9-Akra5BK6KhH_0Auirc4NoBg8ti/view
-**LINKEDIN URL:**https://www.linkedin.com/in/angel-jain-419225386
+
+**LINKEDIN URL:** https://www.linkedin.com/in/angel-jain-419225386
+
 **HackIndia Team Repository:** https://github.com/angeljainxcode/See-It-Solve-It-Hacklabs
+
+
 ![Hackathon](https://img.shields.io/badge/IEEE%20Hack%20Synapse-2026-blue)
 ![n8n](https://img.shields.io/badge/Best%20Use%20of-n8n-orange)
 ![Supabase](https://img.shields.io/badge/Database-Supabase-green)
