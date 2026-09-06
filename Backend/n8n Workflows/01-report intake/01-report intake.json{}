@@ -1,1 +1,725 @@
-
+{
+  "name": "Report Intake",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "report-intake",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -400,
+        128
+      ],
+      "id": "dc1c7d5f-2760-4e8e-ab35-61082e121bdd",
+      "name": "Webhook",
+      "webhookId": "995d8b00-3d34-4251-a1b0-ccbb7a98a082"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "cf506212-fcb4-4b72-b26e-55ae95b2ab65",
+              "name": "description",
+              "value": "={{ $json.body.description }}",
+              "type": "string"
+            },
+            {
+              "id": "e34eed58-4c61-44e7-986f-1555705fc90b",
+              "name": "latitude",
+              "value": "={{ $json.body.latitude }}",
+              "type": "string"
+            },
+            {
+              "id": "0799d335-f8bc-4a55-9533-2a9273bff262",
+              "name": "longitude",
+              "value": "={{ $json.body.longitude }}",
+              "type": "string"
+            },
+            {
+              "id": "d49848cd-2091-40bc-abbc-47b2301bcb9b",
+              "name": "image_url",
+              "value": "={{ $json.body.image_url }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        -176,
+        128
+      ],
+      "id": "96cd526f-92f5-4abb-8aef-88b5cd0f0f5f",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "resource": "image",
+        "operation": "analyze",
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-3.6-flash",
+          "mode": "list",
+          "cachedResultName": "models/gemini-3.6-flash"
+        },
+        "text": "Analyze this civic complaint image.\n\nIdentify:\n- What problem is visible\n- Category of issue\n- Severity (Low, Medium, High)\n- Short description of the visible evidence\n- Confidence level\n\nKeep the response concise and factual.\nDo not assume anything that cannot be seen in the image.\n",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.2,
+      "position": [
+        48,
+        128
+      ],
+      "id": "126fe7ec-9cfa-4afd-a6f0-f3a72bd69594",
+      "name": "Analyze an image",
+      "retryOnFail": true,
+      "credentials": {
+        "googlePalmApi": {
+          "id": "PSNXIoCpKcm2uGBm",
+          "name": "Google Gemini(PaLM) Api account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4.1-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4.1-MINI"
+        },
+        "responses": {
+          "values": [
+            {
+              "content": "=You are the primary AI analyst for a civic grievance reporting system called \"See It. Solve It.\"\n\nAnalyze the citizen's complaint using BOTH:\n1. The citizen's written complaint\n2. The image analysis provided by the image-analysis AI\n\nCitizen's Complaint:\n{{ $('Edit Fields').item.json.description }}\n\nImage Analysis:\n{{ $('Analyze Image').item.json.content.parts[0].text }}\n\nYour task is to determine the nature and urgency of the civic issue.\n\nReturn ONLY this format:\n\nCategory: [specific category]\nSeverity: [Low / Medium / High]\nShort Summary: [one concise sentence]\nSuggested Department: [choose EXACTLY ONE department from the list below]\n\nAllowed Departments:\n- Municipal Corporation\n- Water Department\n- Electricity Department\n- Public Works Department\n- Police / Public Safety\n- Sanitation Department\n\nIMPORTANT RULES:\n- Choose ONLY ONE Suggested Department.\n- Use the exact department name from the allowed list.\n- Never mention multiple departments.\n- Do not create a new department.\n- Give priority to visible evidence from the image when determining the issue.\n- Use the citizen's complaint for additional context.\n- Severity must be exactly Low, Medium, or High.\n- Keep the response concise.\n- Do not add any explanation, markdown, JSON, or extra text."
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.3,
+      "position": [
+        272,
+        128
+      ],
+      "id": "99c70dd1-8468-43b5-9d4d-488662eebde1",
+      "name": "Message a model1",
+      "credentials": {
+        "openAiApi": {
+          "id": "fkHpwhlapcHuW4oU",
+          "name": "OpenAI account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-3.6-flash",
+          "mode": "list",
+          "cachedResultName": "models/gemini-3.6-flash"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=You are the backup AI analyst for a civic grievance reporting system called \"See It. Solve It.\"\n\nThe primary AI may be unavailable, so perform the same analysis independently.\n\nAnalyze the citizen's complaint using BOTH:\n1. The citizen's written complaint\n2. The image analysis provided by the image-analysis AI, if available\n\nCitizen's Complaint:\n{{ $('Edit Fields').item.json.description }}\n\nImage Analysis:\n{{ $json.content.parts[0].text }}\n\nYour task is to determine the nature and urgency of the civic issue.\n\nReturn ONLY this format:\n\nCategory: [specific category]\nSeverity: [Low / Medium / High]\nShort Summary: [one concise sentence]\nSuggested Department: [choose EXACTLY ONE department from the list below]\n\nAllowed Departments:\n- Municipal Corporation\n- Water Department\n- Electricity Department\n- Public Works Department\n- Police / Public Safety\n- Sanitation Department\n\nIMPORTANT RULES:\n- Choose ONLY ONE Suggested Department.\n- Use the exact department name from the allowed list.\n- Never mention multiple departments.\n- Do not create a new department.\n- Give priority to visible evidence from the image when determining the issue.\n- Use the citizen's complaint for additional context.\n- Severity must be exactly Low, Medium, or High.\n- Keep the response concise.\n- Do not add any explanation, markdown, JSON, or extra text."
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.2,
+      "position": [
+        624,
+        192
+      ],
+      "id": "3e56794c-4e2f-403c-bb7d-ada8c3a9d538",
+      "name": "Message a model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "PqV0DbuoKsU3TaYM",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.text }}",
+                    "rightValue": "Potholes & Damaged Roads",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    },
+                    "id": "9b549a7a-c9d3-4f8f-ba1b-204d3f9e96d8"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Road Department"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "89e4fa37-7648-401f-8f5d-844e62078807",
+                    "leftValue": "={{ $json.text }}",
+                    "rightValue": "water",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Water Department"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "9aa8b362-a680-41ca-b90b-6b516f67d965",
+                    "leftValue": "={{ $json.text }}",
+                    "rightValue": "Overflowing Garbage Bins",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Sanitation Department"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "06333f3c-5126-460e-aa28-cfd331690353",
+                    "leftValue": "={{ $json.text }}",
+                    "rightValue": "Broken Streetlights",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Electricity Department"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "57034e7b-a84b-46f4-9aeb-838f9ccad2d3",
+                    "leftValue": "={{ $json.text }}",
+                    "rightValue": "Damage public infrastructure ",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Public Work Department"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "69694ead-f96c-4b0d-8cf4-b7b1492d2d23",
+                    "leftValue": "={{ $json.text }}",
+                    "rightValue": "Muncipal Deparment",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Muncipal Department"
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra"
+        }
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        976,
+        48
+      ],
+      "id": "a8aa4acc-2e3c-4456-bc30-3ca7c32f0ca9",
+      "name": "Routing Logic"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "=complaints",
+        "returnAll": true,
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "issue_type",
+              "condition": "eq",
+              "keyValue": "={{ $('Prepare Complaint').item.json.issue_type }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        1424,
+        48
+      ],
+      "id": "4f890fb3-d181-438c-a1cb-d06217fd8cee",
+      "name": "Get many rows",
+      "alwaysOutputData": false,
+      "credentials": {
+        "supabaseApi": {
+          "id": "RqKwNQMo7zj64rbc",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d9b412fe-afcb-4473-b61b-d34ed8a17ecb",
+              "name": "description",
+              "value": "={{ $('Edit Fields').item.json.description }}",
+              "type": "string"
+            },
+            {
+              "id": "9363971a-35e2-41d6-a537-87e7ffefdc8f",
+              "name": "latitude",
+              "value": "={{ $('Edit Fields').item.json.latitude }}",
+              "type": "string"
+            },
+            {
+              "id": "22d49611-6851-4826-9c3e-c8943635ae90",
+              "name": "longitude",
+              "value": "={{ $('Edit Fields').item.json.longitude }}",
+              "type": "string"
+            },
+            {
+              "id": "33c5df4b-a25b-49a4-8d72-58374764d0d3",
+              "name": "image_url",
+              "value": "={{ $('Edit Fields').item.json.image_url }}",
+              "type": "string"
+            },
+            {
+              "id": "d77ecc42-a2cc-4197-bbca-93edf4d99cf1",
+              "name": "issue_type",
+              "value": "={{ $json.content.parts[0].text.split('\\n')[0].replace('Category: ','') }}",
+              "type": "string"
+            },
+            {
+              "id": "96d0f8de-f9f8-4567-afd9-380cbd9af43a",
+              "name": "severity",
+              "value": "={{ $json.content.parts[0].text.split('\\n')[1].replace('Severity: ','') }}",
+              "type": "string"
+            },
+            {
+              "id": "d4ce1ce5-1d00-44a2-bf37-8e82ba289b2b",
+              "name": "department",
+              "value": "={{ $json.content.parts[0].text.split('\\n')[3].replace('Suggested Department: ','') }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        1232,
+        224
+      ],
+      "id": "36de14a9-4ef7-4785-b344-9dec45c45923",
+      "name": "Prepare Complaint"
+    },
+    {
+      "parameters": {
+        "tableId": "complaints",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "description",
+              "fieldValue": "={{ $('Prepare Complaint').item.json.description }}"
+            },
+            {
+              "fieldId": "latitude",
+              "fieldValue": "={{ $('Prepare Complaint').item.json.latitude }}"
+            },
+            {
+              "fieldId": "longitude",
+              "fieldValue": "={{ $('Prepare Complaint').item.json.longitude }}"
+            },
+            {
+              "fieldId": "image_url",
+              "fieldValue": "={{ $('Prepare Complaint').item.json.image_url"
+            },
+            {
+              "fieldId": "issue_type",
+              "fieldValue": "={{ $('Prepare Complaint').item.json.issue_type }}"
+            },
+            {
+              "fieldId": "severity",
+              "fieldValue": "={{ $('Prepare Complaint').item.json.severity }}"
+            },
+            {
+              "fieldId": "department",
+              "fieldValue": "={{ $('Prepare Complaint').item.json.department }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        1872,
+        224
+      ],
+      "id": "5bb9e6dd-cdcd-4d9a-a6af-551433b92e1a",
+      "name": "Create a row",
+      "credentials": {
+        "supabaseApi": {
+          "id": "RqKwNQMo7zj64rbc",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "935f8203-d9d0-4a30-a50e-65896c08931b",
+              "name": "duplicate",
+              "value": "true",
+              "type": "string"
+            },
+            {
+              "id": "02d09d67-c2ec-4361-88ec-3218467e585f",
+              "name": "existing_complaint_id",
+              "value": "={{ $json.id }}",
+              "type": "string"
+            },
+            {
+              "id": "6c749a50-1750-4588-b601-60735d9d3e99",
+              "name": "message",
+              "value": "Duplicate complaint detected",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        1872,
+        0
+      ],
+      "id": "70612364-9a59-4a3a-8ca7-379c776bc33a",
+      "name": "Duplicate Found"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "RAXnmnp4eaf0cc43",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/RAXnmnp4eaf0cc43",
+          "cachedResultName": "04 - Status Update"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        2096,
+        128
+      ],
+      "id": "e0c26140-3da8-4331-a055-cfb98310c1fa",
+      "name": "Call '04 - Status Update'"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "4e01ad41-bea4-4c55-a812-f9cc901daa7b",
+              "leftValue": "={{ $json.issue_type }}",
+              "rightValue": "Road Infrastructure",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": "={{ false }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1648,
+        48
+      ],
+      "id": "b1091223-2ba3-4781-8160-bfe2eb48ff38",
+      "name": "If-Duplicate?"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Analyze an image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analyze an image": {
+      "main": [
+        [
+          {
+            "node": "Message a model1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model1": {
+      "main": [
+        [
+          {
+            "node": "Routing Logic",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Routing Logic",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Routing Logic": {
+      "main": [
+        [],
+        [],
+        [],
+        [],
+        [],
+        [],
+        [
+          {
+            "node": "Prepare Complaint",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Complaint": {
+      "main": [
+        [
+          {
+            "node": "Get many rows",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Create a row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get many rows": {
+      "main": [
+        [
+          {
+            "node": "If-Duplicate?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a row": {
+      "main": [
+        [
+          {
+            "node": "Call '04 - Status Update'",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Duplicate Found": {
+      "main": [
+        [
+          {
+            "node": "Call '04 - Status Update'",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If-Duplicate?": {
+      "main": [
+        [
+          {
+            "node": "Duplicate Found",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Create a row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "20371eae-aa81-45f0-843c-941aec2d4837",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "f93385ad712da53658d4a49fcb3e181bf51a666ac22ed4a29e3633512e887175"
+  },
+  "nodeGroups": [],
+  "id": "Gol9jlWiO7ckyFUR",
+  "tags": []
+}
