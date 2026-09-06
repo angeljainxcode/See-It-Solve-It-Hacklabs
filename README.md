@@ -8,6 +8,8 @@
 
 **Team:** Hacklabs  
 
+**Team Lead**: Angel Jain 
+
 **MVP LINK:** https://vsnet-plaza-would-synthetic.trycloudflare.com/
 
 **VIDEO LINK**- https://drive.google.com/file/d/1227Y9-Akra5BK6KhH_0Auirc4NoBg8ti/view
